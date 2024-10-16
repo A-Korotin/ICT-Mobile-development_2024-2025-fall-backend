@@ -19,6 +19,7 @@ class JwtDto(BaseModel):
 class AccountInfoEditDto(BaseModel):
     name: Optional[str] = None
     profile_picture: Optional[str] = None
+    password: Optional[str] = None
 
 
 class AccountInfoDto(BaseModel):

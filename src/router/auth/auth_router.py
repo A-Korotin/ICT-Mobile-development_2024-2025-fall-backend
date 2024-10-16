@@ -39,7 +39,7 @@ def register(register_dto: RegisterDto, db: Session = Depends(get_session)) -> J
 def login(login_dto: LoginDto, db: Session = Depends(get_session)) -> JwtDto:
     login_dto = LoginDto.validate(login_dto)
     existing: User | None = db.exec(select(User).where(User.username == login_dto.username)).first()
-    if existing is None:
+    if existing is None or existing.is_active is False:
         raise HTTPException(status_code=401)
 
     if not verify_password_hash(login_dto.password, existing.password):
@@ -82,8 +82,28 @@ def edit_self(edit_dto: AccountInfoEditDto, credentials: JwtAuthorizationCredent
     if edit_dto.profile_picture is not None:
         existing.profile_picture = edit_dto.profile_picture
 
+    if edit_dto.password is not None:
+        existing.password = get_password_hash(edit_dto.password)
+
     db.add(existing)
     db.commit()
     db.refresh(existing)
 
     return AccountInfoDto(username=existing.username, name=existing.name, profile_picture=existing.profile_picture)
+
+
+@router.delete("/me", response_model=None, status_code=204,
+               responses={
+                   204: {},
+                   401: {"model": ErrorDto}
+               })
+def delete_self(credentials: JwtAuthorizationCredentials = Security(access_security),
+                db: Session = Depends(get_session)) -> None:
+    existing: User | None = db.exec(select(User).where(User.username == credentials['username'])).first()
+    if not existing:
+        raise HTTPException(status_code=401)
+
+    existing.is_active = False
+
+    db.add(existing)
+    db.commit()
