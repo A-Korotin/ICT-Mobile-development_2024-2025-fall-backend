@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import bcrypt
 from dotenv import load_dotenv
 import os
@@ -8,6 +10,7 @@ from src.model.user import User
 
 load_dotenv()
 JWT_SECRET = os.getenv("JWT_SECRET")
+ACCESS_EXPIRES_IN = int(os.getenv("ACCESS_EXPIRES_IN"))
 access_security = JwtAccessBearer(secret_key=JWT_SECRET, auto_error=True)
 
 
@@ -23,4 +26,4 @@ def verify_password_hash(candidate: str, hash: str) -> bool:
 
 def generate_jwt(user: User) -> str:
     payload = {"username": user.username}
-    return access_security.create_access_token(payload)
+    return access_security.create_access_token(payload, expires_delta=timedelta(seconds=ACCESS_EXPIRES_IN))
