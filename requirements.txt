@@ -10,3 +10,6 @@ pydantic
 python-dotenv
 python-jose
 SQLAlchemy
+pdf2image
+pytesseract
+pillow
